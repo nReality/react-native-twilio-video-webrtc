@@ -178,11 +178,11 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
 
     private static CameraCapturer cameraCapturer;
     private LocalAudioTrack localAudioTrack;
-    private AudioManager audioManager;
+    // private AudioManager audioManager;
     private int previousAudioMode;
     private boolean disconnectedFromOnDestroy;
     private IntentFilter intentFilter;
-    private BecomingNoisyReceiver myNoisyAudioStreamReceiver;
+    // private BecomingNoisyReceiver myNoisyAudioStreamReceiver;
 
       // Dedicated thread and handler for messages received from a RemoteDataTrack
     private final HandlerThread dataTrackMessageThread =
@@ -207,14 +207,14 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
          * Enable changing the volume using the up/down keys during a conversation
          */
         if (themedReactContext.getCurrentActivity() != null) {
-            themedReactContext.getCurrentActivity().setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
+            // themedReactContext.getCurrentActivity().setVolumeControlStream(AudioManager.STREAM_MUSIC);
         }
         /*
          * Needed for setting/abandoning audio focus during call
          */
-        audioManager = (AudioManager) themedReactContext.getSystemService(Context.AUDIO_SERVICE);
-        myNoisyAudioStreamReceiver = new BecomingNoisyReceiver();
-        intentFilter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
+        // audioManager = (AudioManager) themedReactContext.getSystemService(Context.AUDIO_SERVICE);
+        // myNoisyAudioStreamReceiver = new BecomingNoisyReceiver();
+        // intentFilter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
 
         // Create the local data track
        // localDataTrack = LocalDataTrack.create(this);
@@ -318,7 +318,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
                 }
             }
 
-            themedReactContext.getCurrentActivity().setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
+            // themedReactContext.getCurrentActivity().setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         }
     }
@@ -409,7 +409,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
         /*
          * Create a VideoClient allowing you to connect to a Room
          */
-        setAudioFocus(enableAudio);
+        // setAudioFocus(enableAudio);
         ConnectOptions.Builder connectOptionsBuilder = new ConnectOptions.Builder(this.accessToken);
 
         if (this.roomName != null) {
@@ -440,67 +440,67 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
         room = Video.connect(getContext(), connectOptionsBuilder.build(), roomListener());
     }
 
-    private void setAudioFocus(boolean focus) {
-        if (focus) {
-            previousAudioMode = audioManager.getMode();
-            // Request audio focus before making any device switch.
-            if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                audioManager.requestAudioFocus(this,
-                        AudioManager.STREAM_VOICE_CALL,
-                        AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
-            } else {
-                playbackAttributes = new AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                        .build();
-                audioFocusRequest = new AudioFocusRequest
-                        .Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
-                        .setAudioAttributes(playbackAttributes)
-                        .setAcceptsDelayedFocusGain(true)
-                        .setOnAudioFocusChangeListener(this, handler)
-                        .build();
-                audioManager.requestAudioFocus(audioFocusRequest);
-            }
-            /*
-             * Use MODE_IN_COMMUNICATION as the default audio mode. It is required
-             * to be in this mode when playout and/or recording starts for the best
-             * possible VoIP performance. Some devices have difficulties with
-             * speaker mode if this is not set.
-             */
-            audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-            audioManager.setSpeakerphoneOn(!audioManager.isWiredHeadsetOn());
-            getContext().registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
+    // private void setAudioFocus(boolean focus) {
+    //     if (focus) {
+    //         previousAudioMode = audioManager.getMode();
+    //         // Request audio focus before making any device switch.
+    //         if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+    //             audioManager.requestAudioFocus(this,
+    //                     AudioManager.STREAM_MUSIC,
+    //                     AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+    //         } else {
+    //             playbackAttributes = new AudioAttributes.Builder()
+    //                     .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+    //                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+    //                     .build();
+    //             audioFocusRequest = new AudioFocusRequest
+    //                     .Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+    //                     .setAudioAttributes(playbackAttributes)
+    //                     .setAcceptsDelayedFocusGain(true)
+    //                     .setOnAudioFocusChangeListener(this, handler)
+    //                     .build();
+    //             audioManager.requestAudioFocus(audioFocusRequest);
+    //         }
+    //         /*
+    //          * Use MODE_IN_COMMUNICATION as the default audio mode. It is required
+    //          * to be in this mode when playout and/or recording starts for the best
+    //          * possible VoIP performance. Some devices have difficulties with
+    //          * speaker mode if this is not set.
+    //          */
+    //         audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+    //         audioManager.setSpeakerphoneOn(!audioManager.isWiredHeadsetOn());
+    //         getContext().registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
 
-        } else {
-            if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                audioManager.abandonAudioFocus(this);
-            } else if (audioFocusRequest != null) {
-                audioManager.abandonAudioFocusRequest(audioFocusRequest);
-            }
+    //     } else {
+    //         if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+    //             audioManager.abandonAudioFocus(this);
+    //         } else if (audioFocusRequest != null) {
+    //             audioManager.abandonAudioFocusRequest(audioFocusRequest);
+    //         }
 
-            audioManager.setSpeakerphoneOn(false);
-            audioManager.setMode(previousAudioMode);
-            try {
-                if (myNoisyAudioStreamReceiver != null) {
-                    getContext().unregisterReceiver(myNoisyAudioStreamReceiver);
-                }
-                myNoisyAudioStreamReceiver = null;
-            } catch (Exception e) {
-                // already registered
-                e.printStackTrace();
-            }
-        }
-    }
+    //         audioManager.setSpeakerphoneOn(false);
+    //         audioManager.setMode(previousAudioMode);
+    //         try {
+    //             if (myNoisyAudioStreamReceiver != null) {
+    //                 getContext().unregisterReceiver(myNoisyAudioStreamReceiver);
+    //             }
+    //             myNoisyAudioStreamReceiver = null;
+    //         } catch (Exception e) {
+    //             // already registered
+    //             e.printStackTrace();
+    //         }
+    //     }
+    // }
 
-    private class BecomingNoisyReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-//            audioManager.setSpeakerphoneOn(true);
-            if (Intent.ACTION_HEADSET_PLUG.equals(intent.getAction())) {
-                audioManager.setSpeakerphoneOn(!audioManager.isWiredHeadsetOn());
-            }
-        }
-    }
+    // private class BecomingNoisyReceiver extends BroadcastReceiver {
+    //     @Override
+    //     public void onReceive(Context context, Intent intent) {
+    //        audioManager.setSpeakerphoneOn(true);
+    //         if (Intent.ACTION_HEADSET_PLUG.equals(intent.getAction())) {
+    //             audioManager.setSpeakerphoneOn(!audioManager.isWiredHeadsetOn());
+    //         }
+    //     }
+    // }
 
     @Override
     public void onAudioFocusChange(int focusChange) {
@@ -521,7 +521,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
             localVideoTrack.release();
             localVideoTrack = null;
         }
-        setAudioFocus(false);
+        // setAudioFocus(false);
         if (cameraCapturer != null) {
             cameraCapturer.stopCapture();
             cameraCapturer = null;
@@ -569,12 +569,12 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
     }
 
     public void toggleSoundSetup(boolean speaker){
-      AudioManager audioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
-      if(speaker){
-        audioManager.setSpeakerphoneOn(true);
-      } else {
-        audioManager.setSpeakerphoneOn(false);
-      }
+    //   AudioManager audioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+    //   if(speaker){
+    //     audioManager.setSpeakerphoneOn(true);
+    //   } else {
+    //     audioManager.setSpeakerphoneOn(false);
+    //   }
     }
 
     public void toggleAudio(boolean enabled) {
@@ -588,12 +588,12 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
     }
 
     public void toggleBluetoothHeadset(boolean enabled) {
-        AudioManager audioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
-        if(enabled){
-            audioManager.startBluetoothSco();
-        } else {
-            audioManager.stopBluetoothSco();
-        }
+        // AudioManager audioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+        // if(enabled){
+        //     audioManager.startBluetoothSco();
+        // } else {
+        //     audioManager.stopBluetoothSco();
+        // }
     }
 
     public void toggleRemoteAudio(boolean enabled) {
@@ -809,7 +809,7 @@ public class CustomTwilioVideoView extends View implements LifecycleEventListene
                 CustomTwilioVideoView.room = null;
                 // Only reinitialize the UI if disconnect was not called from onDestroy()
                 if (!disconnectedFromOnDestroy) {
-                    setAudioFocus(false);
+                    // setAudioFocus(false);
                 }
             }
 
